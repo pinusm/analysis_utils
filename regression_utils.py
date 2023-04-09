@@ -54,9 +54,9 @@ metrics_dict = {
     , 'max_error': float_max_error
     , 'mean_absolute_error': mean_absolute_error
     , 'mean_squared_error': mean_squared_error
-    , 'pred_05': pred_05
-    , 'pred_25': pred_25
-    , 'pred_50': pred_50
+    # , 'pred_05': pred_05
+    # , 'pred_25': pred_25
+    # , 'pred_50': pred_50
     , 'pearson': cor
     , 'r2_score': r2_score
     , 'mmre': mmre
