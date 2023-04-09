@@ -1,7 +1,13 @@
 # Based on paulkernfeld answer to
 # https://stackoverflow.com/questions/20224526/how-to-extract-the-decision-rules-from-scikit-learn-decision-tree
 
+import math
+from os.path import join
+
+import sklearn
 from sklearn.tree import _tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 def tree_to_code(tree
                  , feature_names
@@ -159,3 +165,48 @@ def random_forest_to_sql(rf
                                            , "agg"), "w")
     output_file_handle.write(agg_sql)
     output_file_handle.close()
+
+def logistic_regression_to_text(model
+                                , model_name: str
+                                , output_file: str
+                                ):
+    with open(output_file, 'w') as f:
+        f.write(sql_format_signature(function_name=model_name
+                                , feature_names=model.feature_names_in_))
+        t = ("({intercept} ".format(intercept=model.intercept_[0]))
+        for i in range(model.n_features_in_):
+            t += "+ {param}*{weight} ".format(param=model.feature_names_in_[i]
+                                               , weight=model.coef_[0][i])
+        t +=" ) "
+
+        log_form = "1/(1+power({e}, -{t})".format(e=math.e
+                                                  , t=t)
+        f.write(" {f}".format(f=log_form))
+
+
+def models_to_text(models_dict
+                   , output_path: str
+                   , file_name_format: str):
+
+    for model_name in models_dict.keys():
+        if isinstance(models_dict[model_name]['model']
+                , sklearn.tree._classes.DecisionTreeClassifier):
+            tree_to_sql(models_dict[model_name]['model']
+                        , models_dict[model_name]['model'].feature_names_in_
+                        , model_name
+                        , output_file=join(output_path
+                                           , file_name_format).format(model_name=model_name))
+
+        elif isinstance(models_dict[model_name]['model']
+                , sklearn.ensemble._forest.RandomForestClassifier):
+            random_forest_to_sql(models_dict[model_name]['model']
+                         , models_dict[model_name]['model'].feature_names_in_
+                         , model_name
+                         , output_file_prefix=join(output_path
+                                           , file_name_format).format(model_name=model_name))
+        elif isinstance(models_dict[model_name]['model']
+                , sklearn.linear_model._logistic.LogisticRegression):
+            logistic_regression_to_text(model=models_dict[model_name]['model']
+                                        , model_name=model_name
+            , output_file=join(output_path
+                                           , file_name_format).format(model_name=model_name))

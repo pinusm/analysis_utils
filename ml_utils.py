@@ -20,6 +20,14 @@ def save_model(model
     with open(os.path.join(directory, output_file_name), "wb") as f:
         dump(model, f)
 
+def save_models(model_dict
+               , file_name_format
+               , directory):
+
+    for model_name in model_dict.keys():
+        save_model(model=model_dict[model_name]['model']
+                   , output_file_name=file_name_format.format(model_name=model_name)
+                   , directory=directory)
 
 def load_model(model_file_name
                , directory):
@@ -64,7 +72,8 @@ def df_to_sk_form(df
                   , random_state
                   , get_predictive_columns_func
                   ):
-    df = df[get_predictive_columns_func(df) + [concept]]
+    if get_predictive_columns_func is not None:
+        df = df[get_predictive_columns_func(df) + [concept]]
 
     return df_to_sk_structuring(df
                   , concept
@@ -174,6 +183,26 @@ def build_and_eval_model(df
 
     return classifier, performance
 
+def build_and_eval_models(df
+                                , classifiers
+                                , concept
+                                , test_size
+                                , random_state
+                                , evaluation_function=evaluate_model
+                                , verbose: bool = True):
+
+    train_df, test_df = train_test_split(df
+                                         , test_size=test_size)
+
+    results = train_and_eval_models_on_datasets(concept
+                                      , train_df
+                                      , test_df
+                                      , classifiers
+                                      , evaluation_function=evaluation_function
+                                      , random_state=random_state
+                                      , verbose=verbose)
+
+    return results
 
 def same_set_build_and_eval_model(df
                                 , classifier
